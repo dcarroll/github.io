@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>sfdxError.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AuthInfo.html">AuthInfo</a><ul class='methods'><li data-type='method'><a href="AuthInfo.html#.create">create</a></li><li data-type='method'><a href="AuthInfo.html#init">init</a></li><li data-type='method'><a href="AuthInfo.html#jwtRefresh">jwtRefresh</a></li><li data-type='method'><a href="AuthInfo.html#oauthRefresh">oauthRefresh</a></li><li data-type='method'><a href="AuthInfo.html#save">save</a></li><li data-type='method'><a href="AuthInfo.html#toJSON">toJSON</a></li><li data-type='method'><a href="AuthInfo.html#update">update</a></li></ul></li><li><a href="Connection.html">Connection</a><ul class='methods'><li data-type='method'><a href="Connection.html#.create">create</a></li><li data-type='method'><a href="Connection.html#request">request</a></li></ul></li><li><a href="Global_.html">Global</a><ul class='methods'><li data-type='method'><a href="Global_.html#.fetchConfigInfo">fetchConfigInfo</a></li><li data-type='method'><a href="Global_.html#.saveConfigInfo">saveConfigInfo</a></li></ul></li><li><a href="Logger.html">Logger</a><ul class='methods'><li data-type='method'><a href="Logger.html#.child">child</a></li><li data-type='method'><a href="Logger.html#.create">create</a></li><li data-type='method'><a href="Logger.html#.get">get</a></li><li data-type='method'><a href="Logger.html#.root">root</a></li><li data-type='method'><a href="Logger.html#addField">addField</a></li><li data-type='method'><a href="Logger.html#addFilter">addFilter</a></li><li data-type='method'><a href="Logger.html#addLogFileStream">addLogFileStream</a></li><li data-type='method'><a href="Logger.html#applyFilters">applyFilters</a></li><li data-type='method'><a href="Logger.html#child">child</a></li><li data-type='method'><a href="Logger.html#close">close</a></li><li data-type='method'><a href="Logger.html#getBufferedRecords">getBufferedRecords</a></li><li data-type='method'><a href="Logger.html#readLogContentsAsText">readLogContentsAsText</a></li><li data-type='method'><a href="Logger.html#setLevel">setLevel</a></li><li data-type='method'><a href="Logger.html#shouldLog">shouldLog</a></li><li data-type='method'><a href="Logger.html#useMemoryLogging">useMemoryLogging</a></li></ul></li><li><a href="Messages.html">Messages</a><ul class='methods'><li data-type='method'><a href="Messages.html#.generateFileLoaderFunction">generateFileLoaderFunction</a></li><li data-type='method'><a href="Messages.html#.import">import</a></li><li data-type='method'><a href="Messages.html#.importMessageFile">importMessageFile</a></li><li data-type='method'><a href="Messages.html#.importMessagesDirectory">importMessagesDirectory</a></li><li data-type='method'><a href="Messages.html#.loadMessages">loadMessages</a></li><li data-type='method'><a href="Messages.html#getMessage">getMessage</a></li></ul></li><li><a href="Mode.html">Mode</a></li><li><a href="SfdxError.html">SfdxError</a><ul class='methods'><li data-type='method'><a href="SfdxError.html#format">format</a></li></ul></li><li><a href="SfdxErrorConfig.html">SfdxErrorConfig</a><ul class='methods'><li data-type='method'><a href="SfdxErrorConfig.html#addAction">addAction</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getActions">getActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getError">getError</a></li><li data-type='method'><a href="SfdxErrorConfig.html#load">load</a></li><li data-type='method'><a href="SfdxErrorConfig.html#removeActions">removeActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorKey">setErrorKey</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorTokens">setErrorTokens</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">sfdxError.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+/*
+ * Copyright (c) 2016, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const _ = require("lodash");
+const messages_1 = require("./messages");
+const ux_1 = require("./ux");
+/**
+ * A class to manage all the keys and tokens for a message bundle to use with SfdxError.
+ *
+ * @example
+ * SfdxError.create(new SfdxErrorConfig('apex', 'runTest').addAction('apexErrorAction1', [className]));
+ */
+class SfdxErrorConfig {
+    /**
+     * Create a new SfdxErrorConfig.
+     * @param bundle The message bundle.
+     * @param errorKey The error message key.
+     * @param errorTokens The tokens to use when getting the error message
+     * @param actionKey The action message keys.
+     * @param actionTokens The tokens to use when getting the action message(s)
+     */
+    constructor(bundle, errorKey, errorTokens = [], actionKey, actionTokens) {
+        this.actions = new Map();
+        this.bundle = bundle;
+        this.errorKey = errorKey;
+        this.errorTokens = errorTokens;
+        if (actionKey) {
+            this.actions.set(actionKey, actionTokens);
+        }
+    }
+    /**
+     * Set the error key. Returns the SfdxErrorConfig for chaining.
+     * @param key Set the error key.
+     */
+    setErrorKey(key) {
+        this.errorKey = key;
+        return this;
+    }
+    /**
+     * Set the error tokens. Returns the SfdxErrorConfig for chaining.
+     * @param tokens The error tokens
+     */
+    setErrorTokens(tokens) {
+        this.errorTokens = tokens;
+        return this;
+    }
+    /**
+     * Add an error action to assist the user with a resolution. Returns the SfdxErrorConfig for chaining.
+     * @param actionKey The action key in the message bundle
+     * @param actionTokens The action tokens for the string
+     */
+    addAction(actionKey, actionTokens) {
+        this.actions.set(actionKey, actionTokens);
+        return this;
+    }
+    /**
+     * Load the messages using Messages.loadMessages.
+     */
+    async load() {
+        this.messages = await messages_1.default.loadMessages(this.bundle);
+        return this.messages;
+    }
+    /**
+     * Get the error message using messages.getMessage.
+     * @throws AlmError If errorMessages.load was not called first
+     */
+    getError() {
+        if (!this.messages) {
+            throw new SfdxError('SfdxErrorConfig not loaded.');
+        }
+        return this.messages.getMessage(this.errorKey, this.errorTokens);
+    }
+    /**
+     * Get the action messages using messages.getMessage.
+     * @throws AlmError If errorMessages.load was not called first
+     */
+    getActions() {
+        if (!this.messages) {
+            throw new SfdxError('SfdxErrorConfig not loaded.');
+        }
+        if (this.actions.size === 0) {
+            return;
+        }
+        const actions = [];
+        this.actions.forEach((tokens, key) => {
+            actions.push(this.messages.getMessage(key, tokens));
+        });
+        return actions;
+    }
+    /**
+     * Remove all actions from this error config. Useful when reusing SfdxErrorConfig
+     * for other error messages within the same bundle. Returns the SfdxErrorConfig for chaining.
+     */
+    removeActions() {
+        this.actions = new Map();
+        return this;
+    }
+}
+exports.SfdxErrorConfig = SfdxErrorConfig;
+/*
+ *  A generalized sfdx error which also contains an action. The action is used in the
+ *  CLI to help guide users past the error.
+ */
+class SfdxError extends Error {
+    // The create implementation function.
+    static async create(bundleOrErrorConfig, key, tokens) {
+        let errorConfig;
+        if (_.isString(bundleOrErrorConfig)) {
+            errorConfig = new SfdxErrorConfig(bundleOrErrorConfig, key, tokens);
+        }
+        else {
+            errorConfig = bundleOrErrorConfig;
+        }
+        await errorConfig.load();
+        return new SfdxError(errorConfig.getError(), errorConfig.errorKey, errorConfig.getActions());
+    }
+    static wrap(err) {
+        return new SfdxError(err.message, err.name);
+    }
+    /**
+     * Create an SfdxError.
+     * @param message The error message
+     * @param name The error name. Defaults to 'SfdxError'
+     * @param action The action message
+     * @param exitCode The exit code which will be used by the CLI.
+     */
+    constructor(message, name, actions, exitCode) {
+        super(message);
+        this.name = name || 'SfdxError';
+        this.actions = actions;
+        this.exitCode = exitCode || 1;
+    }
+    setCommandName(commandName) {
+        this.commandName = commandName;
+        return this;
+    }
+    /**
+     * Format errors and actions for human consumption. Adds 'ERROR running &lt;command name>',
+     * and outputs all errors in red.  When there are actions, we add 'Try this:' in blue
+     * followed by each action in red on its own line.
+     */
+    format() {
+        const colorizedArgs = [];
+        const runningWith = this.commandName ? ` running ${this.commandName}` : '';
+        colorizedArgs.push(ux_1.color.bold(`ERROR${runningWith}: `));
+        colorizedArgs.push(ux_1.color.red(this.message));
+        // Format any actions.
+        if (_.get(this, 'actions.length')) {
+            colorizedArgs.push(`\n\n${ux_1.color.blue(ux_1.color.bold('Try this:'))}`);
+            this.actions.forEach((action) => {
+                colorizedArgs.push(`\n${ux_1.color.red(action)}`);
+            });
+        }
+        return colorizedArgs;
+    }
+}
+exports.SfdxError = SfdxError;
+exports.default = SfdxError;
+//# sourceMappingURL=sfdxError.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jan 21 2018 13:04:09 GMT-0700 (MST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

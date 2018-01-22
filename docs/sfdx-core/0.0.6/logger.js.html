@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>logger.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AuthInfo.html">AuthInfo</a><ul class='methods'><li data-type='method'><a href="AuthInfo.html#.create">create</a></li><li data-type='method'><a href="AuthInfo.html#init">init</a></li><li data-type='method'><a href="AuthInfo.html#jwtRefresh">jwtRefresh</a></li><li data-type='method'><a href="AuthInfo.html#oauthRefresh">oauthRefresh</a></li><li data-type='method'><a href="AuthInfo.html#save">save</a></li><li data-type='method'><a href="AuthInfo.html#toJSON">toJSON</a></li><li data-type='method'><a href="AuthInfo.html#update">update</a></li></ul></li><li><a href="Connection.html">Connection</a><ul class='methods'><li data-type='method'><a href="Connection.html#.create">create</a></li><li data-type='method'><a href="Connection.html#request">request</a></li></ul></li><li><a href="Global_.html">Global</a><ul class='methods'><li data-type='method'><a href="Global_.html#.fetchConfigInfo">fetchConfigInfo</a></li><li data-type='method'><a href="Global_.html#.saveConfigInfo">saveConfigInfo</a></li></ul></li><li><a href="Logger.html">Logger</a><ul class='methods'><li data-type='method'><a href="Logger.html#.child">child</a></li><li data-type='method'><a href="Logger.html#.create">create</a></li><li data-type='method'><a href="Logger.html#.get">get</a></li><li data-type='method'><a href="Logger.html#.root">root</a></li><li data-type='method'><a href="Logger.html#addField">addField</a></li><li data-type='method'><a href="Logger.html#addFilter">addFilter</a></li><li data-type='method'><a href="Logger.html#addLogFileStream">addLogFileStream</a></li><li data-type='method'><a href="Logger.html#applyFilters">applyFilters</a></li><li data-type='method'><a href="Logger.html#child">child</a></li><li data-type='method'><a href="Logger.html#close">close</a></li><li data-type='method'><a href="Logger.html#getBufferedRecords">getBufferedRecords</a></li><li data-type='method'><a href="Logger.html#readLogContentsAsText">readLogContentsAsText</a></li><li data-type='method'><a href="Logger.html#setLevel">setLevel</a></li><li data-type='method'><a href="Logger.html#shouldLog">shouldLog</a></li><li data-type='method'><a href="Logger.html#useMemoryLogging">useMemoryLogging</a></li></ul></li><li><a href="Messages.html">Messages</a><ul class='methods'><li data-type='method'><a href="Messages.html#.generateFileLoaderFunction">generateFileLoaderFunction</a></li><li data-type='method'><a href="Messages.html#.import">import</a></li><li data-type='method'><a href="Messages.html#.importMessageFile">importMessageFile</a></li><li data-type='method'><a href="Messages.html#.importMessagesDirectory">importMessagesDirectory</a></li><li data-type='method'><a href="Messages.html#.loadMessages">loadMessages</a></li><li data-type='method'><a href="Messages.html#getMessage">getMessage</a></li></ul></li><li><a href="Mode.html">Mode</a></li><li><a href="SfdxError.html">SfdxError</a><ul class='methods'><li data-type='method'><a href="SfdxError.html#format">format</a></li></ul></li><li><a href="SfdxErrorConfig.html">SfdxErrorConfig</a><ul class='methods'><li data-type='method'><a href="SfdxErrorConfig.html#addAction">addAction</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getActions">getActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getError">getError</a></li><li data-type='method'><a href="SfdxErrorConfig.html#load">load</a></li><li data-type='method'><a href="SfdxErrorConfig.html#removeActions">removeActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorKey">setErrorKey</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorTokens">setErrorTokens</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">logger.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/*
+ * Copyright (c) 2016, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const bunyan = require("bunyan-sfdx-no-dtrace");
+const _ = require("lodash");
+const global_1 = require("./global");
+const util_1 = require("./util");
+const sfdxError_1 = require("./sfdxError");
+class Bunyan extends bunyan {
+    constructor(options, _childOptions, _childSimple) {
+        super(options, _childOptions, _childSimple);
+    }
+    level(lvl) { return super.level(lvl); }
+    addStream(stream, defaultLevel) { return super.addStream(stream, defaultLevel); }
+    levels(name, value) { return super.levels(name, value); }
+    child(name, fields = {}) {
+        if (!name) {
+            throw new sfdxError_1.SfdxError('LoggerNameRequired');
+        }
+        fields.log = name;
+        // only support including additional fields on log line (no config)
+        return super.child(fields, true);
+    }
+    trace(...args) { return super.trace(...args); }
+    debug(...args) { return super.debug(...args); }
+    info(...args) { return super.info(...args); }
+    warn(...args) { return super.warn(...args); }
+    error(...args) { return super.error(...args); }
+    fatal(...args) { return super.fatal(...args); }
+}
+exports.Bunyan = Bunyan;
+var LoggerLevel;
+(function (LoggerLevel) {
+    LoggerLevel[LoggerLevel["TRACE"] = 10] = "TRACE";
+    LoggerLevel[LoggerLevel["DEBUG"] = 20] = "DEBUG";
+    LoggerLevel[LoggerLevel["INFO"] = 30] = "INFO";
+    LoggerLevel[LoggerLevel["WARN"] = 40] = "WARN";
+    LoggerLevel[LoggerLevel["ERROR"] = 50] = "ERROR";
+    LoggerLevel[LoggerLevel["FATAL"] = 60] = "FATAL";
+})(LoggerLevel = exports.LoggerLevel || (exports.LoggerLevel = {}));
+const SFDX_LOGGER_NAME = 'sfdx';
+const DEFAULT_LOG_LEVEL = LoggerLevel.WARN;
+const DEFAULT_USER_DIR_MODE = '700';
+const DEFAULT_USER_FILE_MODE = '600';
+// Ok to log clientid
+const FILTERED_KEYS = [
+    'sid',
+    // Any json attribute that contains the words "access" and "token" will have the attribute/value hidden
+    { name: 'access_token', regex: 'access[^\'"]*token' },
+    // Any json attribute that contains the words "refresh" and "token" will have the attribute/value hidden
+    { name: 'refresh_token', regex: 'refresh[^\'"]*token' },
+    'clientsecret',
+    // Any json attribute that contains the words "sfdx", "auth", and "url" will have the attribute/value hidden
+    { name: 'sfdxauthurl', regex: 'sfdx[^\'"]*auth[^\'"]*url' }
+];
+// Registry of loggers for reuse and to properly close streams
+const loggerRegistry = new Map();
+// close streams
+// FIXME: sadly, this does not work when process.exit is called; for now, disabled process.exit
+const closeStreams = (fn) => {
+    _.invokeMap(loggerRegistry, 'close', fn);
+};
+const uncaughtExceptionHandler = (err) => {
+    // log the exception
+    if (loggerRegistry.has(SFDX_LOGGER_NAME)) {
+        // FIXME: good chance this won't be logged because
+        // process.exit was called before this is logged
+        // https://github.com/trentm/node-bunyan/issues/95
+        loggerRegistry.get(SFDX_LOGGER_NAME).fatal(err);
+    }
+};
+// SFDX code and plugins should never show tokens or connect app information in the logs
+const _filter = (...args) => args.map((arg) => {
+    if (_.isArray(arg)) {
+        return _filter(...arg);
+    }
+    if (arg) {
+        let _arg = arg;
+        // Normalize all objects into a string. This include errors.
+        if (_.isObject(arg)) {
+            _arg = JSON.stringify(arg);
+        }
+        const HIDDEN = 'HIDDEN';
+        FILTERED_KEYS.forEach((key) => {
+            let expElement = key;
+            let expName = key;
+            // Filtered keys can be strings or objects containing regular expression components.
+            if (_.isPlainObject(key)) {
+                expElement = key.regex;
+                expName = key.name;
+            }
+            const hiddenAttrMessage = `"&lt;${expName} - ${HIDDEN}>"`;
+            // Match all json attribute values case insensitive: ex. {" Access*^&amp;(*()^* Token " : " 45143075913458901348905 \n\t" ...}
+            const regexTokens = new RegExp(`(['"][^'"]*${expElement}[^'"]*['"]\\s*:\\s*)['"][^'"]*['"]`, 'gi');
+            _arg = _arg.replace(regexTokens, `$1${hiddenAttrMessage}`);
+            // Match all key value attribute case insensitive: ex. {" key\t"    : ' access_token  ' , " value " : "  dsafgasr431 " ....}
+            const keyRegex = new RegExp(`(['"]\\s*key\\s*['"]\\s*:)\\s*['"]\\s*${expElement}\\s*['"]\\s*.\\s*['"]\\s*value\\s*['"]\\s*:\\s*['"]\\s*[^'"]*['"]`, 'gi');
+            _arg = _arg.replace(keyRegex, `$1${hiddenAttrMessage}`);
+        });
+        // This is a jsforce message we are masking. This can be removed after the following pull request is committed
+        // and pushed to a jsforce release.
+        //
+        // Looking  For: "Refreshed access token = ..."
+        // Related Jsforce pull requests:
+        //  https://github.com/jsforce/jsforce/pull/598
+        //  https://github.com/jsforce/jsforce/pull/608
+        //  https://github.com/jsforce/jsforce/pull/609
+        const jsForceTokenRefreshRegEx = new RegExp('Refreshed(.*)access(.*)token(.*)=\\s*[^\'"\\s*]*');
+        _arg = _arg.replace(jsForceTokenRefreshRegEx, `&lt;refresh_token - ${HIDDEN}>`);
+        _arg = _arg.replace(/sid=(.*)/, `sid=&lt;${HIDDEN}>`);
+        // return an object if an object was logged; otherwise return the filtered string.
+        return _.isObject(arg) ? JSON.parse(_arg) : _arg;
+    }
+    else {
+        return arg;
+    }
+});
+/**
+ * Logger class for logging to sfdx.log based on the bunyan implementation.
+ * Register and create a new logger:
+ * @example Logger.create('myLogger').init();
+ * @extends bunyan
+ * @see https://github.com/cwallsfdc/node-bunyan
+ */
+class Logger extends Bunyan {
+    constructor(options, _childOptions, _childSimple) {
+        super(options, _childOptions, _childSimple);
+        this.filters = [];
+        this.fields = {};
+        this._name = options.name;
+    }
+    /**
+     * Create/get the root logger with the default log level and file stream.
+     */
+    static async root() {
+        let logger;
+        try {
+            logger = Logger.get();
+        }
+        catch (e) {
+            logger = Logger.create().setLevel();
+            // disable log file writing, if applicable
+            if (process.env.SFDX_DISABLE_LOG_FILE !== 'true' &amp;&amp; !global_1.Global.getEnvironmentMode().is(global_1.Modes.TEST)) {
+                await logger.addLogFileStream(global_1.Global.LOG_FILE_PATH);
+            }
+        }
+        return logger;
+    }
+    /**
+     * Create a child of the root logger, inheriting log level, streams, etc.
+     * @param name The name of the child logger.
+     * @param fields Additional fields included in all log lines.
+     */
+    static async child(name, fields) {
+        return (await Logger.root()).child(name, fields);
+    }
+    /**
+     * Register, create and return a named instance of a logger.
+     *
+     * @param name The name of the logger to create.  Defaults to the SFDX core logger.
+     * @returns Logger The Logger instance.
+     */
+    static create(name = SFDX_LOGGER_NAME) {
+        // Return it if already registered
+        if (loggerRegistry.has(name)) {
+            return loggerRegistry.get(name);
+        }
+        // Create the logger
+        const logger = new Logger({
+            name,
+            level: 'error',
+            serializers: bunyan.stdSerializers,
+            // No streams for now, not until it is enabled
+            streams: []
+        });
+        // All SFDX loggers must filter sensitive data
+        logger.addFilter((...args) => _filter(...args));
+        // Register the new logger
+        loggerRegistry.set(name, logger);
+        logger.trace(`Created and registered '${name}' logger instance`);
+        return logger;
+    }
+    /**
+     * Get a registered logger instance.
+     *
+     * @param name Returns the registered logger instance.
+     */
+    static get(name = SFDX_LOGGER_NAME) {
+        if (!loggerRegistry.has(name)) {
+            throw new Error(`Logger ${name} not found`);
+        }
+        return loggerRegistry.get(name);
+    }
+    /**
+     * Adds a file stream to this logger.
+     *
+     * @param logFile The path to the log file.  If it doesn't exist it will be created.
+     */
+    async addLogFileStream(logFile) {
+        try {
+            // Check if we have write access to the log file (i.e., we created it already)
+            await util_1.SfdxUtil.access(logFile, fs.constants.W_OK);
+        }
+        catch (err1) {
+            try {
+                await util_1.SfdxUtil.mkdirp(path.dirname(logFile), { mode: DEFAULT_USER_DIR_MODE });
+            }
+            catch (err2) {
+                // noop; directory exists already
+            }
+            try {
+                await util_1.SfdxUtil.writeFile(logFile, '', { mode: DEFAULT_USER_FILE_MODE });
+            }
+            catch (err3) {
+                throw sfdxError_1.SfdxError.wrap(err3);
+            }
+        }
+        // avoid multiple streams to same log file
+        if (!this.streams.find((stream) => stream.type === 'file' &amp;&amp; stream.path === logFile)) {
+            // TODO: rotating-file
+            // https://github.com/trentm/node-bunyan#stream-type-rotating-file
+            this.addStream({ type: 'file', path: logFile, level: this.level() });
+        }
+        // to debug 'Possible EventEmitter memory leak detected', add the following to top of index.js or, for
+        // log tests, top of this file.
+        // https://git.soma.salesforce.com/ALMSourceDrivenDev/force-com-toolbelt/compare/cwall/logs-for-EventEmitter-memory-leak
+        // ensure that uncaughtException is logged
+        process.on('uncaughtException', uncaughtExceptionHandler);
+        // FIXME: ensure that streams are flushed on exit
+        // https://github.com/trentm/node-bunyan/issues/37
+        process.on('exit', closeStreams);
+        return Promise.resolve();
+    }
+    /**
+     * Get the name of this logger.
+     */
+    get name() {
+        return this._name;
+    }
+    /**
+     * Compares the requested log level with the current log level.  Returns true if
+     * the requested log level is greater than or equal to the current log level.
+     *
+     * @param logLevel The requested log level to compare against the currently set log level
+     * @returns {boolean}
+     */
+    shouldLog(logLevel) {
+        return logLevel >= this.level();
+    }
+    /**
+     * Use in-memory logging for this logger instance instead of any parent streams. Useful for testing.
+     *
+     * WARNING: This cannot be undone for this logger instance.
+     */
+    useMemoryLogging() {
+        this.streams = [];
+        this.ringbuffer = new bunyan.RingBuffer({ limit: 5000 });
+        this.addStream({ type: 'raw', stream: this.ringbuffer, level: this.level() });
+        return this;
+    }
+    /**
+     * Returns an array of log line objects. Each element is an object that corresponds to a log line.
+     *
+     * @returns {Array&lt;string>}
+     */
+    getBufferedRecords() {
+        return this.ringbuffer.records;
+    }
+    /**
+     * Returns a text blob of all the log lines contained in memory or the log file.
+     *
+     * @returns {string}
+     */
+    readLogContentsAsText() {
+        if (this.ringbuffer) {
+            return this.getBufferedRecords().reduce((accum, value) => {
+                accum += (JSON.stringify(value) + os.EOL);
+                return accum;
+            }, '');
+        }
+        else {
+            let content = '';
+            this.streams.forEach(async (stream) => {
+                if (stream.type === 'file') {
+                    content += await util_1.SfdxUtil.readFile(stream.path, 'utf8');
+                }
+            });
+            return content;
+        }
+    }
+    /**
+     * Adds a filter to be applied on all logging.
+     *
+     * @param filter - function defined in a command constructor
+     * that manipulates log messages
+     */
+    addFilter(filter) {
+        this.filters.push(filter);
+    }
+    /**
+     * When logging messages to the default log file, this method
+     * calls the filters defined in the executed commands.
+     *
+     * @param logLevel The log level.  Filtering will only be applied for relevant log levels.
+     * @param args An array of strings, objects, etc.
+     */
+    applyFilters(logLevel, ...args) {
+        if (this.shouldLog(logLevel)) {
+            this.filters.forEach((filter) => {
+                args = filter(...args);
+            });
+        }
+        return args &amp;&amp; args.length === 1 ? args[0] : args;
+    }
+    /**
+     * Close the logger, including any streams, and remove all listeners.
+     *
+     * @param {function} fn A function to call for each stream with the stream as an arg.
+     */
+    close(fn) {
+        if (this.streams) {
+            try {
+                this.streams.forEach((stream) => {
+                    if (fn &amp;&amp; _.isFunction(fn)) {
+                        fn(stream);
+                    }
+                    // close stream, flush buffer to disk
+                    if (stream.type === 'file') {
+                        stream.stream.end();
+                    }
+                });
+            }
+            finally {
+                // remove listeners to avoid 'Possible EventEmitter memory leak detected'
+                process.removeListener('uncaughtException', uncaughtExceptionHandler);
+                process.removeListener('exit', closeStreams);
+            }
+        }
+    }
+    /**
+     * Create a child logger, typically to add a few log record fields.
+     *
+     * @see bunyan.child(options, simple).
+     *
+     * @param {string} name The name of the child logger that is emitted w/ logline as log:&lt;name>
+     * @param {object} fields Additional fields included in all log lines for the child logger.
+     * @returns {logger}
+     */
+    child(name, fields = {}) {
+        // only support including additional fields on log line (no config)
+        const childLogger = super.child(name, fields);
+        childLogger._name = name;
+        childLogger.filters = this.filters;
+        // store to close on exit
+        loggerRegistry.set(name, childLogger);
+        this.trace(`Setup '${name}' logger instance`);
+        return childLogger;
+    }
+    /**
+     * Add a field to all log lines for this logger
+     *
+     * @param name The name of the field to add.
+     * @param value The value of the field to be logged.
+     * @returns {logger}
+     */
+    addField(name, value) {
+        this.fields[name] = value;
+        return this;
+    }
+    isDebugEnabled() {
+        return super.debug();
+    }
+    isError() {
+        return this.level() === LoggerLevel.ERROR;
+    }
+    /**
+     * Set the logging level of all streams for this logger.
+     * @param level The logger level.  @see LoggerLevel enum for values.
+     */
+    setLevel(level) {
+        const defaultLogLevel = process.env.SFDX_LOG_LEVEL || DEFAULT_LOG_LEVEL;
+        level = _.isNil(level) ? defaultLogLevel : level;
+        try {
+            this.level(level);
+        }
+        catch (err) {
+            throw sfdxError_1.SfdxError.wrap(err);
+        }
+        return this;
+    }
+    trace(...args) {
+        return super.trace(this.applyFilters(LoggerLevel.TRACE, ...args));
+    }
+    debug(...args) {
+        return super.debug(this.applyFilters(LoggerLevel.DEBUG, ...args));
+    }
+    info(...args) {
+        return super.info(this.applyFilters(LoggerLevel.INFO, ...args));
+    }
+    warn(...args) {
+        return super.warn(this.applyFilters(LoggerLevel.WARN, ...args));
+    }
+    error(...args) {
+        return super.error(this.applyFilters(LoggerLevel.ERROR, ...args));
+    }
+    fatal(...args) {
+        // Always show fatal to stderr
+        console.error(...args); // eslint-disable-line no-console
+        return super.fatal(this.applyFilters(LoggerLevel.FATAL, ...args));
+    }
+}
+exports.Logger = Logger;
+exports.default = Logger;
+//# sourceMappingURL=logger.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jan 21 2018 13:04:09 GMT-0700 (MST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

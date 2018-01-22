@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ux.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AuthInfo.html">AuthInfo</a><ul class='methods'><li data-type='method'><a href="AuthInfo.html#.create">create</a></li><li data-type='method'><a href="AuthInfo.html#init">init</a></li><li data-type='method'><a href="AuthInfo.html#jwtRefresh">jwtRefresh</a></li><li data-type='method'><a href="AuthInfo.html#oauthRefresh">oauthRefresh</a></li><li data-type='method'><a href="AuthInfo.html#save">save</a></li><li data-type='method'><a href="AuthInfo.html#toJSON">toJSON</a></li><li data-type='method'><a href="AuthInfo.html#update">update</a></li></ul></li><li><a href="Connection.html">Connection</a><ul class='methods'><li data-type='method'><a href="Connection.html#.create">create</a></li><li data-type='method'><a href="Connection.html#request">request</a></li></ul></li><li><a href="Global_.html">Global</a><ul class='methods'><li data-type='method'><a href="Global_.html#.fetchConfigInfo">fetchConfigInfo</a></li><li data-type='method'><a href="Global_.html#.saveConfigInfo">saveConfigInfo</a></li></ul></li><li><a href="Logger.html">Logger</a><ul class='methods'><li data-type='method'><a href="Logger.html#.child">child</a></li><li data-type='method'><a href="Logger.html#.create">create</a></li><li data-type='method'><a href="Logger.html#.get">get</a></li><li data-type='method'><a href="Logger.html#.root">root</a></li><li data-type='method'><a href="Logger.html#addField">addField</a></li><li data-type='method'><a href="Logger.html#addFilter">addFilter</a></li><li data-type='method'><a href="Logger.html#addLogFileStream">addLogFileStream</a></li><li data-type='method'><a href="Logger.html#applyFilters">applyFilters</a></li><li data-type='method'><a href="Logger.html#child">child</a></li><li data-type='method'><a href="Logger.html#close">close</a></li><li data-type='method'><a href="Logger.html#getBufferedRecords">getBufferedRecords</a></li><li data-type='method'><a href="Logger.html#readLogContentsAsText">readLogContentsAsText</a></li><li data-type='method'><a href="Logger.html#setLevel">setLevel</a></li><li data-type='method'><a href="Logger.html#shouldLog">shouldLog</a></li><li data-type='method'><a href="Logger.html#useMemoryLogging">useMemoryLogging</a></li></ul></li><li><a href="Messages.html">Messages</a><ul class='methods'><li data-type='method'><a href="Messages.html#.generateFileLoaderFunction">generateFileLoaderFunction</a></li><li data-type='method'><a href="Messages.html#.import">import</a></li><li data-type='method'><a href="Messages.html#.importMessageFile">importMessageFile</a></li><li data-type='method'><a href="Messages.html#.importMessagesDirectory">importMessagesDirectory</a></li><li data-type='method'><a href="Messages.html#.loadMessages">loadMessages</a></li><li data-type='method'><a href="Messages.html#getMessage">getMessage</a></li></ul></li><li><a href="Mode.html">Mode</a></li><li><a href="SfdxError.html">SfdxError</a><ul class='methods'><li data-type='method'><a href="SfdxError.html#format">format</a></li></ul></li><li><a href="SfdxErrorConfig.html">SfdxErrorConfig</a><ul class='methods'><li data-type='method'><a href="SfdxErrorConfig.html#addAction">addAction</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getActions">getActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getError">getError</a></li><li data-type='method'><a href="SfdxErrorConfig.html#load">load</a></li><li data-type='method'><a href="SfdxErrorConfig.html#removeActions">removeActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorKey">setErrorKey</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorTokens">setErrorTokens</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">ux.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+/*
+ * Copyright (c) 2016, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const cli_ux_1 = require("cli-ux");
+const logger_1 = require("./logger");
+const _ = require("lodash");
+const chalk_1 = require("chalk");
+// tslint:disable-next-line:variable-name
+exports.CustomColors = {
+    supportsColor: chalk_1.default.supportsColor,
+    // map gray -> dim because it's not solarized compatible
+    gray: (s) => chalk_1.default.dim(s),
+    grey: (s) => chalk_1.default.dim(s),
+    configVar: (s) => chalk_1.default.green(s),
+    release: (s) => chalk_1.default.blue.bold(s),
+    cmd: (s) => chalk_1.default.cyan.bold(s)
+};
+exports.color = new Proxy(chalk_1.default, {
+    // tslint:disable-next-line:no-shadowed-variable
+    get: (chalk, name) => {
+        if (exports.CustomColors[name]) {
+            return exports.CustomColors[name];
+        }
+        return chalk[name];
+    }
+});
+class UX extends cli_ux_1.CLI {
+    constructor(logger, isOutputEnabled = true) {
+        super();
+        this.logger = logger;
+        this.isOutputEnabled = isOutputEnabled;
+    }
+    /**
+     * Formats a deprecation warning for display to stderr, stdout, and/or logs.
+     *
+     * @param def The definition for the deprecated object.
+     * @returns {string} the formatted deprecation message.
+     */
+    static formatDeprecationWarning(def) {
+        let msg = def.messageOverride || `The ${def.type} "${def.name}" has been deprecated and will be removed in v${(def.version + 1)}.0 or later.`;
+        if (def.to) {
+            msg += ` Use "${def.to}" instead.`;
+        }
+        if (def.message) {
+            msg += ` ${def.message}`;
+        }
+        return msg;
+    }
+    /**
+     * Logs at INFO level and conditionally writes to stdout if stream output is enabled.
+     */
+    log(data, ...args) {
+        if (this.isOutputEnabled) {
+            super.log(data, ...args);
+        }
+        // log to sfdx.log after the console as log filtering mutates the args.
+        this.logger.info(data, ...args);
+        return this;
+    }
+    /**
+     *  Go directly to stdout. Useful when wanting to write to the same line.
+     */
+    logRaw(...args) {
+        this.logger.info(...args);
+        if (this.isOutputEnabled) {
+            this.stdout.write(...args);
+        }
+        return this;
+    }
+    /**
+     * Log JSON to stdout and to the log file with log level info.
+     *
+     * @param obj The object to log.
+     */
+    logJson(obj) {
+        this.styledJSON(obj);
+        // log to sfdx.log after the console as log filtering mutates the args.
+        this.logger.info(obj);
+        return this;
+    }
+    /**
+     * Log a warning and conditionally write to stderr if the log level is
+     * WARNING or above and stream output is enabled.  The message is added
+     * to a static warnings Set if stream output is not enabled for later
+     * consumption and manipulation.  @see SfdxUX.warnings
+     *
+     * @param message The warning message to output.
+     */
+    warn(message) {
+        const warning = exports.color.yellow('WARNING:');
+        // Necessarily log to sfdx.log.
+        this.logger.warn(warning, message);
+        if (this.logger.shouldLog(logger_1.LoggerLevel.WARN)) {
+            if (!this.isOutputEnabled) {
+                UX.warnings.add(message);
+            }
+            else {
+                this.stderr.write(warning + message);
+            }
+        }
+        return this;
+    }
+    /**
+     * Log an error and conditionally write to stderr if stream output is enabled.
+     */
+    error(...args) {
+        if (this.isOutputEnabled) {
+            this.stderr.write(...args);
+        }
+        return this.logger.error(...args);
+    }
+    /**
+     * Log JSON to stderr and to the log file with log level error.
+     *
+     * @param obj The error object to log.
+     */
+    errorJson(obj) {
+        const err = JSON.stringify(obj, null, 4);
+        this.stderr.write(err);
+        return this.logger.error(err);
+    }
+    /**
+     * Log at INFO level and conditionally write to stdout in a table format if
+     * stream output is enabled.
+     *
+     * @param data The data to be output in table format.
+     * @param options The table options to use for formatting.
+     */
+    table(data, options = {}) {
+        if (this.isOutputEnabled) {
+            const columns = _.get(options, 'columns');
+            if (columns) {
+                const _columns = [];
+                // Unfortunately, have to use _.forEach rather than _.map here because lodash typings
+                // don't like the possibility of 2 different iterator types.
+                // tslint:disable-next-line:no-unused-expression
+                _.forEach(columns, (col) => {
+                    if (_.isString(col)) {
+                        _columns.push({ key: col, label: _.toUpper(col) });
+                    }
+                    else {
+                        // default to uppercase labels for consistency but allow overriding
+                        // if already defined for the column config.
+                        _columns.push(Object.assign({ label: _.toUpper(col['key']) }, col));
+                    }
+                });
+                options.columns = _columns;
+            }
+            super.table(data, options);
+        }
+        // Log after table output as log filtering mutates data.
+        this.logger.info(data);
+        return this;
+    }
+    /**
+     * Log at INFO level and conditionally write to stdout in styled object format if
+     * stream output is enabled.
+     *
+     * @param obj The object to be styled for stdout.
+     * @param keys The object keys to be written to stdout.
+     */
+    styledObject(obj, keys) {
+        this.logger.info(obj);
+        if (this.isOutputEnabled) {
+            super.styledObject(obj, keys);
+        }
+        return this;
+    }
+    /**
+     * Log at INFO level and conditionally write to stdout in styled header format if
+     * stream output is enabled.
+     *
+     * @param header The header to be styled.
+     */
+    styledHeader(header) {
+        this.logger.info(header);
+        if (this.isOutputEnabled) {
+            super.styledHeader(header);
+        }
+        return this;
+    }
+}
+// Collection of warnings that can be accessed and manipulated later.
+UX.warnings = new Set();
+exports.default = UX;
+//# sourceMappingURL=ux.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jan 21 2018 13:04:09 GMT-0700 (MST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

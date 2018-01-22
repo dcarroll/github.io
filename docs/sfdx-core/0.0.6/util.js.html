@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>util.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AuthInfo.html">AuthInfo</a><ul class='methods'><li data-type='method'><a href="AuthInfo.html#.create">create</a></li><li data-type='method'><a href="AuthInfo.html#init">init</a></li><li data-type='method'><a href="AuthInfo.html#jwtRefresh">jwtRefresh</a></li><li data-type='method'><a href="AuthInfo.html#oauthRefresh">oauthRefresh</a></li><li data-type='method'><a href="AuthInfo.html#save">save</a></li><li data-type='method'><a href="AuthInfo.html#toJSON">toJSON</a></li><li data-type='method'><a href="AuthInfo.html#update">update</a></li></ul></li><li><a href="Connection.html">Connection</a><ul class='methods'><li data-type='method'><a href="Connection.html#.create">create</a></li><li data-type='method'><a href="Connection.html#request">request</a></li></ul></li><li><a href="Global_.html">Global</a><ul class='methods'><li data-type='method'><a href="Global_.html#.fetchConfigInfo">fetchConfigInfo</a></li><li data-type='method'><a href="Global_.html#.saveConfigInfo">saveConfigInfo</a></li></ul></li><li><a href="Logger.html">Logger</a><ul class='methods'><li data-type='method'><a href="Logger.html#.child">child</a></li><li data-type='method'><a href="Logger.html#.create">create</a></li><li data-type='method'><a href="Logger.html#.get">get</a></li><li data-type='method'><a href="Logger.html#.root">root</a></li><li data-type='method'><a href="Logger.html#addField">addField</a></li><li data-type='method'><a href="Logger.html#addFilter">addFilter</a></li><li data-type='method'><a href="Logger.html#addLogFileStream">addLogFileStream</a></li><li data-type='method'><a href="Logger.html#applyFilters">applyFilters</a></li><li data-type='method'><a href="Logger.html#child">child</a></li><li data-type='method'><a href="Logger.html#close">close</a></li><li data-type='method'><a href="Logger.html#getBufferedRecords">getBufferedRecords</a></li><li data-type='method'><a href="Logger.html#readLogContentsAsText">readLogContentsAsText</a></li><li data-type='method'><a href="Logger.html#setLevel">setLevel</a></li><li data-type='method'><a href="Logger.html#shouldLog">shouldLog</a></li><li data-type='method'><a href="Logger.html#useMemoryLogging">useMemoryLogging</a></li></ul></li><li><a href="Messages.html">Messages</a><ul class='methods'><li data-type='method'><a href="Messages.html#.generateFileLoaderFunction">generateFileLoaderFunction</a></li><li data-type='method'><a href="Messages.html#.import">import</a></li><li data-type='method'><a href="Messages.html#.importMessageFile">importMessageFile</a></li><li data-type='method'><a href="Messages.html#.importMessagesDirectory">importMessagesDirectory</a></li><li data-type='method'><a href="Messages.html#.loadMessages">loadMessages</a></li><li data-type='method'><a href="Messages.html#getMessage">getMessage</a></li></ul></li><li><a href="Mode.html">Mode</a></li><li><a href="SfdxError.html">SfdxError</a><ul class='methods'><li data-type='method'><a href="SfdxError.html#format">format</a></li></ul></li><li><a href="SfdxErrorConfig.html">SfdxErrorConfig</a><ul class='methods'><li data-type='method'><a href="SfdxErrorConfig.html#addAction">addAction</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getActions">getActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getError">getError</a></li><li data-type='method'><a href="SfdxErrorConfig.html#load">load</a></li><li data-type='method'><a href="SfdxErrorConfig.html#removeActions">removeActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorKey">setErrorKey</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorTokens">setErrorTokens</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">util.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+/*
+ * Copyright (c) 2016, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const lodash_1 = require("lodash");
+const util_1 = require("util");
+const sfdxError_1 = require("./sfdxError");
+const processJsonError = async (error, data, jsonPath) => {
+    if (error.name === 'SyntaxError') {
+        const BUFFER = 20;
+        // Get the position of the error from the error message.  This is the error index
+        // within the file contents as 1 long string.
+        const errPosition = parseInt(error.message.match(/position (\d+)/)[1], 10);
+        // Get a buffered error portion to display, highlighting the error in red
+        const start = Math.max(0, (errPosition - BUFFER));
+        const end = Math.min(data.length, (errPosition + BUFFER));
+        const errorPortion = data.substring(start, errPosition) +
+            // logger.color.bgRed(data.substring(errPosition, errPosition + 1)) +
+            data.substring(errPosition + 2, end);
+        // only need to count new lines before the error position
+        const lineNumber = data.substring(0, errPosition).split('\n').length;
+        throw await sfdxError_1.SfdxError.create('sfdx-core', 'JsonParseError', [jsonPath, lineNumber, errorPortion]);
+    }
+    else {
+        throw error;
+    }
+};
+class SfdxUtil {
+    /**
+     * Read a file and convert it to JSON
+     *
+     * @param {string} jsonPath The path of the file
+     * @param {boolean} throwOnEmpty Whether to throw an error if the JSON file is empty
+     * @return {Promise} promise The contents of the file as a JSON object
+     */
+    static async readJSON(jsonPath, throwOnEmpty) {
+        const fileData = (await SfdxUtil.readFile(jsonPath, 'utf8')).toString();
+        return await SfdxUtil.parseJSON(fileData, jsonPath, throwOnEmpty);
+    }
+    /**
+     * Convert a JSON object to a string and write it to a file.
+     *
+     * @param {string} jsonPath The path of the file
+     * @param {object} data The JSON object to write
+     * @return {Promise} promise
+     */
+    static async writeJSON(jsonPath, data) {
+        const fileData = JSON.stringify(data, null, 4);
+        await SfdxUtil.writeFile(jsonPath, fileData, 'utf8');
+    }
+    /**
+     * Parse json data from a file.
+     * @param data Data to parse.
+     * @param jsonPath The file path. Defaults to 'unknown'.
+     * @param throwOnEmpty Throw an exception if the data contents are empty
+     */
+    static async parseJSON(data, jsonPath = 'unknown', throwOnEmpty = true) {
+        if (lodash_1.isEmpty(data) &amp;&amp; throwOnEmpty) {
+            throw await sfdxError_1.SfdxError.create('sfdx-core', 'JsonParseError', [jsonPath, 1, 'FILE HAS NO CONTENT']);
+        }
+        try {
+            return JSON.parse(data || '{}');
+        }
+        catch (error) {
+            await processJsonError(error, data, jsonPath);
+        }
+    }
+}
+/**
+ * Promisified version of fs.readFile
+ */
+SfdxUtil.readFile = util_1.promisify(fs_1.readFile);
+/**
+ * Promisified version of fs.writeFile
+ */
+SfdxUtil.writeFile = util_1.promisify(fs_1.writeFile);
+/**
+ * Promisified version of fs.access
+ */
+SfdxUtil.access = util_1.promisify(fs_1.access);
+/**
+ * Promisified version of mkdirp
+ */
+SfdxUtil.mkdirp = util_1.promisify(require('mkdirp'));
+exports.SfdxUtil = SfdxUtil;
+//# sourceMappingURL=util.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jan 21 2018 13:04:09 GMT-0700 (MST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

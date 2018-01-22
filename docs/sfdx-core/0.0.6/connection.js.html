@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>connection.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AuthInfo.html">AuthInfo</a><ul class='methods'><li data-type='method'><a href="AuthInfo.html#.create">create</a></li><li data-type='method'><a href="AuthInfo.html#init">init</a></li><li data-type='method'><a href="AuthInfo.html#jwtRefresh">jwtRefresh</a></li><li data-type='method'><a href="AuthInfo.html#oauthRefresh">oauthRefresh</a></li><li data-type='method'><a href="AuthInfo.html#save">save</a></li><li data-type='method'><a href="AuthInfo.html#toJSON">toJSON</a></li><li data-type='method'><a href="AuthInfo.html#update">update</a></li></ul></li><li><a href="Connection.html">Connection</a><ul class='methods'><li data-type='method'><a href="Connection.html#.create">create</a></li><li data-type='method'><a href="Connection.html#request">request</a></li></ul></li><li><a href="Global_.html">Global</a><ul class='methods'><li data-type='method'><a href="Global_.html#.fetchConfigInfo">fetchConfigInfo</a></li><li data-type='method'><a href="Global_.html#.saveConfigInfo">saveConfigInfo</a></li></ul></li><li><a href="Logger.html">Logger</a><ul class='methods'><li data-type='method'><a href="Logger.html#.child">child</a></li><li data-type='method'><a href="Logger.html#.create">create</a></li><li data-type='method'><a href="Logger.html#.get">get</a></li><li data-type='method'><a href="Logger.html#.root">root</a></li><li data-type='method'><a href="Logger.html#addField">addField</a></li><li data-type='method'><a href="Logger.html#addFilter">addFilter</a></li><li data-type='method'><a href="Logger.html#addLogFileStream">addLogFileStream</a></li><li data-type='method'><a href="Logger.html#applyFilters">applyFilters</a></li><li data-type='method'><a href="Logger.html#child">child</a></li><li data-type='method'><a href="Logger.html#close">close</a></li><li data-type='method'><a href="Logger.html#getBufferedRecords">getBufferedRecords</a></li><li data-type='method'><a href="Logger.html#readLogContentsAsText">readLogContentsAsText</a></li><li data-type='method'><a href="Logger.html#setLevel">setLevel</a></li><li data-type='method'><a href="Logger.html#shouldLog">shouldLog</a></li><li data-type='method'><a href="Logger.html#useMemoryLogging">useMemoryLogging</a></li></ul></li><li><a href="Messages.html">Messages</a><ul class='methods'><li data-type='method'><a href="Messages.html#.generateFileLoaderFunction">generateFileLoaderFunction</a></li><li data-type='method'><a href="Messages.html#.import">import</a></li><li data-type='method'><a href="Messages.html#.importMessageFile">importMessageFile</a></li><li data-type='method'><a href="Messages.html#.importMessagesDirectory">importMessagesDirectory</a></li><li data-type='method'><a href="Messages.html#.loadMessages">loadMessages</a></li><li data-type='method'><a href="Messages.html#getMessage">getMessage</a></li></ul></li><li><a href="Mode.html">Mode</a></li><li><a href="SfdxError.html">SfdxError</a><ul class='methods'><li data-type='method'><a href="SfdxError.html#format">format</a></li></ul></li><li><a href="SfdxErrorConfig.html">SfdxErrorConfig</a><ul class='methods'><li data-type='method'><a href="SfdxErrorConfig.html#addAction">addAction</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getActions">getActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#getError">getError</a></li><li data-type='method'><a href="SfdxErrorConfig.html#load">load</a></li><li data-type='method'><a href="SfdxErrorConfig.html#removeActions">removeActions</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorKey">setErrorKey</a></li><li data-type='method'><a href="SfdxErrorConfig.html#setErrorTokens">setErrorTokens</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">connection.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+/*
+ * Copyright (c) 2016, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+const lodash_1 = require("lodash");
+const logger_1 = require("./logger");
+const jsforce_1 = require("jsforce");
+const clientId = `sfdx toolbelt:${process.env.SFDX_SET_CLIENT_IDS || ''}`;
+exports.SFDX_HTTP_HEADERS = {
+    'content-type': 'application/json',
+    'user-agent': clientId
+};
+/**
+ * Handles connections and requests to Salesforce Orgs.
+ * @extends jsforce.Connection
+ *
+ * @example
+ * const connection = await Connection.create(AuthInfo.create(myAdminUsername));
+ * connection.query('my_soql_query');
+ */
+class Connection extends jsforce_1.Connection {
+    /**
+     * Create and return a connection to an org using authentication info.
+     *
+     * @param authInfo The authentication info from the persistence store.
+     */
+    static async create(authInfo) {
+        const logger = await logger_1.Logger.child('connection');
+        const baseOptions = {
+            // @TODO: eventually this will come from config but for now hardcode the version.
+            // version: await config.getApiVersion(),
+            version: '42.0',
+            callOptions: {
+                client: clientId
+            }
+        };
+        // Get connection options from auth info and create a new jsForce connection
+        const connectionOptions = Object.assign(baseOptions, authInfo.toJSON());
+        return new Connection(connectionOptions, authInfo, logger);
+    }
+    constructor(options, authInfo, logger) {
+        super(options);
+        this.authInfo = authInfo;
+        // Set the jsForce connection logger to be our Bunyan logger.
+        if (logger) {
+            this.logger = this._logger = this.tooling._logger = logger;
+        }
+        if (authInfo.isOauth()) {
+            // Set an OAuth access token refresh function handler
+            super.on('refresh', authInfo.oauthRefresh.bind(authInfo));
+        }
+    }
+    /**
+     * Send REST API request with given HTTP request info, with connected session information
+     * and SFDX headers.
+     *
+     * @override jsforce.connection.request
+     *
+     * @param request HTTP request object or URL to GET request
+     * @param options HTTP API request options
+     */
+    async request(request, options) {
+        const _request = lodash_1.isString(request) ? { method: 'GET', url: request } : request;
+        _request.headers = Object.assign({}, exports.SFDX_HTTP_HEADERS, request.headers);
+        this.logger.debug(`request: ${JSON.stringify(_request)}`);
+        return await super.request(_request, options);
+    }
+}
+exports.Connection = Connection;
+exports.default = Connection;
+//# sourceMappingURL=connection.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jan 21 2018 13:04:09 GMT-0700 (MST) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
